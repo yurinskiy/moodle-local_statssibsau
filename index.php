@@ -23,27 +23,80 @@
  */
 
 require_once('../../config.php');
+require_once('./form.php');
+require_once('./locallib.php');
+require_once('./render.php');
+
+$categoryid = optional_param('categoryid', 0, PARAM_INT);
 
 $url = new moodle_url('/local/statssibsau/index.php');
-$context = context_system::instance();
+$systemcontext = $context = context_system::instance();
+if ($categoryid) {
+    $category = core_course_category::get($categoryid);
+    $context = context_coursecat::instance($category->id);
+    $url->param('categoryid', $category->id);
+}
+
+$pagetitle = get_string('pluginname', 'local_statssibsau');
+$pageheading = format_string($SITE->fullname, true, array('context' => $systemcontext));
 
 $PAGE->set_context($context);
 $PAGE->set_url($url);
-$PAGE->set_title(get_string('pluginname', 'local_statssibsau'));
+$PAGE->set_pagelayout('admin');
+$PAGE->set_title($pagetitle);
+$PAGE->set_heading($pageheading);
+
+navigation_node::override_active_url($url);
+
+if ($categoryid) {
+    $PAGE->navbar->add(get_string('administrationsite'), new moodle_url('/admin/search.php'));
+    $PAGE->navbar->add(get_string('reports'), new moodle_url('/admin/category.php', array('category' => 'reports')));
+    $PAGE->navbar->add($pagetitle, new moodle_url('/local/statssibsau/index.php'));
+    $PAGE->navbar->add($category->name);
+}
 
 /** Проверяем авторизован ли пользователь */
 require_login();
 
 /** Проверяем права пользователя */
 if (!is_siteadmin() && !has_capability('local/statssibsau:view', $context)) {
-    header("Location: " . $CFG->wwwroot);
+    header('Location: ' . $CFG->wwwroot);
     die();
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('pluginname', 'local_statssibsau'));
+echo $OUTPUT->heading('Статистика по пользователями');
 
-echo 'Hi!';
+echo local_statssibsau_render_info_sites();
+
+echo $OUTPUT->heading(isset($category) ? 'Статистика по курсам для категории «' . $category->name .'»' : 'Статистика по курсам');
+
+$mform = new local_statssibsau_form_categories(null, array('categoryid' => $categoryid));
+$mform->display();
+
+echo local_statssibsau_render_info_courses($categoryid);
+
+?>
+
+    <script>
+        function getLoggedinNow(context) {
+            $.ajax({
+                type: 'POST',
+                url: '<?php echo new moodle_url('/local/statssibsau/api/index.php'); ?>?type=' + context.data('type'),
+                beforeSend: function() {
+                    context.html('Загрузка...');
+                },
+                success: function(data){
+                    context.html(data.count);
+                    context.attr('disabled', true);
+                },
+                error: function () {
+                    context.html('Что-то пошло не так...')
+                },
+            });
+        }
+    </script>
+
+<?php
 
 echo $OUTPUT->footer();
-?>

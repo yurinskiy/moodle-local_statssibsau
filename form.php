@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details.
+ * This file contains the code for the plugin integration.
  *
  * @package   local_statssibsau
  * @copyright 2020, Yuriy Yurinskiy <yuriyyurinskiy@yandex.ru>
@@ -24,8 +24,30 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2020030200;
-$plugin->requires  = 2018120300;
-$plugin->component = 'local_statssibsau';
-$plugin->maturity = MATURITY_BETA;
-$plugin->release = '0.0.1';
+require_once($CFG->libdir . '/formslib.php');
+
+/**
+ * This class is form course categories
+ *
+ * @copyright 2019, YuriyYurinskiy <yuriyyurinskiy@yandex.ru>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class local_statssibsau_form_categories extends moodleform
+{
+    /**
+     * @see lib/moodleform#definition()
+     */
+    public function definition()
+    {
+        $mform = $this->_form;
+
+        $options = array();
+        $options[0] = get_string('top');
+        $options = array_merge($options, core_course_category::make_categories_list('moodle/category:manage'));
+
+        $mform->addElement('select', 'categoryid', get_string('categories'), $options);
+        $mform->setDefault('categoryid', $this->_customdata['categoryid']);
+
+        $this->add_action_buttons(false, 'Отфильтровать');
+    }
+}
