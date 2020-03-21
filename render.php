@@ -32,8 +32,7 @@ defined('MOODLE_INTERNAL') || die;
  * @return string
  * @throws coding_exception
  */
-function local_statssibsau_render_table($id, $data)
-{
+function local_statssibsau_render_table($id, $data) {
     $table = new html_table();
     $table->head = [
             'Характеристика',
@@ -62,8 +61,7 @@ function local_statssibsau_render_table($id, $data)
  * @throws coding_exception
  * @throws dml_exception
  */
-function local_statssibsau_render_info_courses($category = 0)
-{
+function local_statssibsau_render_info_courses($category = 0) {
     global $OUTPUT;
 
     $coursescount = local_statssibsau_count_courses($category);
@@ -105,8 +103,7 @@ function local_statssibsau_render_info_courses($category = 0)
  * @throws coding_exception
  * @throws dml_exception
  */
-function local_statssibsau_render_info_sites()
-{
+function local_statssibsau_render_info_sites() {
     global $OUTPUT, $SESSION;
 
     $data[] = [
@@ -135,17 +132,23 @@ function local_statssibsau_render_info_sites()
     $title = $SESSION->loggin_teacher ?? 'Нажмите, чтобы посчитать';
     $data[] = [
             'Количество преподавателей за сегодня',
-            sprintf('<button onclick="getLoggedinNow($(this)); return false;" data-type="%s">%s</button>', LOCAL_STATSSIBSAU_LOGGIN_ROLE_TEACHER, $title),
+            sprintf('<button class="ajaxLoadData" data-url="%s">%s</button>',
+                    new moodle_url('/local/statssibsau/api/index.php', array('type' => LOCAL_STATSSIBSAU_LOGGIN_ROLE_TEACHER)),
+                    $title),
     ];
     $title = $SESSION->loggin_assistant ?? 'Нажмите, чтобы посчитать';
     $data[] = [
             'Количество ассистентов за сегодня',
-            sprintf('<button onclick="getLoggedinNow($(this)); return false;" data-type="%s">%s</button>', LOCAL_STATSSIBSAU_LOGGIN_ROLE_ASSISTANT, $title),
+            sprintf('<button class="ajaxLoadData" data-url="%s">%s</button>',
+                    new moodle_url('/local/statssibsau/api/index.php', array('type' => LOCAL_STATSSIBSAU_LOGGIN_ROLE_ASSISTANT)),
+                    $title),
     ];
     $title = $SESSION->loggin_student ?? 'Нажмите, чтобы посчитать';
     $data[] = [
             'Количество студентов за сегодня',
-            sprintf('<button onclick="getLoggedinNow($(this)); return false;" data-type="%s">%s</button>', LOCAL_STATSSIBSAU_LOGGIN_ROLE_STUDENT, $title),
+            sprintf('<button class="ajaxLoadData" data-url="%s">%s</button>',
+                    new moodle_url('/local/statssibsau/api/index.php', array('type' => LOCAL_STATSSIBSAU_LOGGIN_ROLE_STUDENT)),
+                    $title),
     ];
 
     return local_statssibsau_render_table('users', $data);

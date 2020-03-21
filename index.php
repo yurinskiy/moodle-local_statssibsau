@@ -46,6 +46,9 @@ $PAGE->set_pagelayout('admin');
 $PAGE->set_title($pagetitle);
 $PAGE->set_heading($pageheading);
 
+$PAGE->requires->jquery();
+$PAGE->requires->js(new moodle_url('/local/statssibsau/js/module.js'));
+
 navigation_node::override_active_url($url);
 
 if ($categoryid) {
@@ -75,28 +78,5 @@ $mform = new local_statssibsau_form_categories(null, array('categoryid' => $cate
 $mform->display();
 
 echo local_statssibsau_render_info_courses($categoryid);
-
-?>
-
-    <script>
-        function getLoggedinNow(context) {
-            $.ajax({
-                type: 'POST',
-                url: '<?php echo new moodle_url('/local/statssibsau/api/index.php'); ?>?type=' + context.data('type'),
-                beforeSend: function() {
-                    context.html('Загрузка...');
-                },
-                success: function(data){
-                    context.html(data.count);
-                    context.attr('disabled', true);
-                },
-                error: function () {
-                    context.html('Что-то пошло не так...')
-                },
-            });
-        }
-    </script>
-
-<?php
 
 echo $OUTPUT->footer();
