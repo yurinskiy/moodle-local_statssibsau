@@ -27,11 +27,9 @@ require_once('../locallib.php');
 
 header('Content-Type: application/json');
 
-$midnight = new DateTime('midnight', core_date::get_server_timezone_object());
-
 $type = required_param('type', PARAM_INT);
-$dbeg = optional_param('dbeg', $midnight->getTimestamp(), PARAM_INT);
-$dend = optional_param('dend', $midnight->modify('+1day -1second')->getTimestamp(), PARAM_INT);
+$dbeg = optional_param('dbeg', LOCAL_STATSSIBSAU_DBEG, PARAM_INT);
+$dend = optional_param('dend', LOCAL_STATSSIBSAU_DEND, PARAM_INT);
 
 /** Проверяем права пользователя */
 if (!is_siteadmin() && !has_capability('local/statssibsau:view', $context)) {

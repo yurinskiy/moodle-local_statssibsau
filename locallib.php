@@ -32,6 +32,11 @@ define('LOCAL_STATSSIBSAU_LOGGIN_ROLE_TEACHER', 1);
 define('LOCAL_STATSSIBSAU_LOGGIN_ROLE_ASSISTANT', 2);
 define('LOCAL_STATSSIBSAU_LOGGIN_ROLE_STUDENT', 3);
 
+$midnight = new DateTime('midnight', core_date::get_server_timezone_object());
+
+define('LOCAL_STATSSIBSAU_DBEG', $midnight->getTimestamp());
+define('LOCAL_STATSSIBSAU_DEND', $midnight->modify('+1day - 1second')->getTimestamp());
+
 /**
  * Возвращает количество успешных попыток авторизации между датами
  *

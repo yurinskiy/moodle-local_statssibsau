@@ -72,11 +72,20 @@ echo $OUTPUT->heading('Статистика по пользователями');
 
 echo local_statssibsau_render_info_sites();
 
-echo $OUTPUT->heading(isset($category) ? 'Статистика по курсам для категории «' . $category->name .'»' : 'Статистика по курсам');
+echo $OUTPUT->heading(isset($category) ? 'Статистика по курсам для категории «' . $category->name . '»' : 'Статистика по курсам');
 
 $mform = new local_statssibsau_form_categories(null, array('categoryid' => $categoryid));
 $mform->display();
 
 echo local_statssibsau_render_info_courses($categoryid);
+
+echo $OUTPUT->heading('Экспорт');
+
+$mform = new local_statssibsau_form_teacher_actions(new moodle_url('/local/statssibsau/api/export.php'), array(
+        'categoryid' => $categoryid,
+        'dbeg' => LOCAL_STATSSIBSAU_DBEG,
+        'dend' => LOCAL_STATSSIBSAU_DEND,
+));
+$mform->display();
 
 echo $OUTPUT->footer();
