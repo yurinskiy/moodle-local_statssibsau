@@ -44,6 +44,8 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                 break;
             case 5:
                 break;
+            case 6:
+                break;
             default:
         }
         echo '<pre>' . $data->dbeg . '</pre>';

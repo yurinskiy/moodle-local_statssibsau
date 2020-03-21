@@ -69,6 +69,7 @@ class local_statssibsau_form_teacher_actions extends moodleform {
                 3 => 'Вся активность преподавателей курсов',
                 4 => 'Ранжированная активность студентов',
                 5 => 'Вся активность студентов',
+                6 => 'Список курсов',
         );
 
         $select = (new HTML_QuickForm())->createElement('select', 'type', 'Тип выгрузки');
@@ -98,6 +99,8 @@ class local_statssibsau_form_teacher_actions extends moodleform {
 
         $mform->disabledIf('custom_courses', 'type', 'neq', 3);
         $mform->disabledIf('categoryid', 'type', 'eq', 3);
+        $mform->disabledIf('dbeg', 'type', 'eq', 6);
+        $mform->disabledIf('dend', 'type', 'eq', 6);
 
         $this->add_action_buttons(false, 'Выгрузить');
     }
