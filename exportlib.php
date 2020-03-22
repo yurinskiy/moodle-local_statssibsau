@@ -123,7 +123,7 @@ function local_statssibsau_export_list_courses(int $categoryid, array $categoryt
             $temp[] = $v;
         }
 
-        $result .= implode(',', $temp) . PHP_EOL;
+        $result .= implode(';', $temp) . PHP_EOL;
     }
 
     $categories = $DB->get_records('course_categories', [
