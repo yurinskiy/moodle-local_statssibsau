@@ -22,10 +22,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../config.php');
-require_once('./form.php');
-require_once('./locallib.php');
-require_once('./render.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/form.php');
+require_once(__DIR__ . '/locallib.php');
+require_once(__DIR__ . '/render.php');
 
 $categoryid = optional_param('categoryid', 0, PARAM_INT);
 

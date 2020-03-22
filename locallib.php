@@ -138,11 +138,14 @@ function local_statssibsau_count_courses($category = 0) {
                     'category' => $record->id
             ]);
 
-            $result->teacher = merge($result->teacher, local_statssibsau_users_have_role(LOCAL_STATSSIBSAU_ROLE_TEACHER, $record->id));
+            $result->teacher =
+                    merge($result->teacher, local_statssibsau_users_have_role(LOCAL_STATSSIBSAU_ROLE_TEACHER, $record->id));
 
-            $result->assistant = merge($result->assistant, local_statssibsau_users_have_role(LOCAL_STATSSIBSAU_ROLE_ASSISTANT, $record->id));
+            $result->assistant =
+                    merge($result->assistant, local_statssibsau_users_have_role(LOCAL_STATSSIBSAU_ROLE_ASSISTANT, $record->id));
 
-            $result->student = merge($result->student, local_statssibsau_users_have_role(LOCAL_STATSSIBSAU_ROLE_STUDENT, $record->id));
+            $result->student =
+                    merge($result->student, local_statssibsau_users_have_role(LOCAL_STATSSIBSAU_ROLE_STUDENT, $record->id));
 
             $records = array_map(static function($a, $b) {
                 if ($a === $b) {

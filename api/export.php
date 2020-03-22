@@ -22,9 +22,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../../config.php');
-require_once('../locallib.php');
-require_once('../form.php');
+require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../exportlib.php');
+require_once(__DIR__ . '/../form.php');
+
+/** Для правильной отдачи файла */
+ignore_user_abort(true);
 
 $PAGE->set_context(context_system::instance());
 
@@ -34,25 +37,17 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
 
     if ($data = $mform->get_data()) {
         switch ($data->type) {
-            case 1:
-                break;
-            case 2:
-                break;
-            case 3:
-                break;
-            case 4:
-                break;
-            case 5:
-                break;
             case 6:
+                $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
+                // флаг LOCK_EX для предотвращения записи данного файла кем-нибудь другим в данное время
+                file_put_contents($temp_filepath, 'ID курса, Название курса, Видимость курса, Видимость категории, Категория', LOCK_EX);
+                file_put_contents($temp_filepath, local_statssibsau_export_list_courses($data->categoryid), LOCK_EX);
+                local_statssibsau_file_csv_export($temp_filepath, LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type] . '.csv');
                 break;
             default:
+                echo 'В разработке...';
+                die();
         }
-        echo '<pre>' . $data->dbeg . '</pre>';
-        echo '<pre>' . $data->dend . '</pre>';
-        echo '<pre>' . $data->type . '</pre>';
-        echo 'В разработке';
-        die();
     }
 }
 

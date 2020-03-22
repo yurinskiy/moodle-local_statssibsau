@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->libdir . '/formslib.php');
+require_once (__DIR__ . '/exportlib.php');
 
 /**
  * This class is form course categories
@@ -63,18 +64,11 @@ class local_statssibsau_form_teacher_actions extends moodleform {
     public function definition() {
         $mform = $this->_form;
 
-        $options = array(
-                1 => 'Ранжированная активность преподавателей',
-                2 => 'Вся активность преподавателей',
-                3 => 'Вся активность преподавателей курсов',
-                4 => 'Ранжированная активность студентов',
-                5 => 'Вся активность студентов',
-                6 => 'Список курсов',
-        );
+        $options = LOCAL_STATSSIBSAU_TYPE_EXPORT;
 
         $select = (new HTML_QuickForm())->createElement('select', 'type', 'Тип выгрузки');
         foreach ($options as $k => $v) {
-            if (in_array($k, [1, 2, 3, 4], true)) {
+            if (in_array($k, [1, 2, 3, 4, 5], true)) {
                 $select->addOption($v, $k, array('disabled' => 'disabled'));
             } else {
                 $select->addOption($v, $k);
@@ -96,6 +90,8 @@ class local_statssibsau_form_teacher_actions extends moodleform {
         $mform->setDefault('dbeg', $this->_customdata['dbeg']);
         $mform->addElement('date_time_selector', 'dend', get_string('to'));
         $mform->setDefault('dend', $this->_customdata['dend']);
+
+        $mform->addRule('type', 'Выберите тип выгрузки', 'required');
 
         $mform->disabledIf('custom_courses', 'type', 'neq', 3);
         $mform->disabledIf('categoryid', 'type', 'eq', 3);
