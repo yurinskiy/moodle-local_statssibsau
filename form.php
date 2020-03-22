@@ -68,7 +68,7 @@ class local_statssibsau_form_teacher_actions extends moodleform {
 
         $select = (new HTML_QuickForm())->createElement('select', 'type', 'Тип выгрузки');
         foreach ($options as $k => $v) {
-            if (in_array($k, [1, 2, 3, 4, 5], true)) {
+            if (in_array($k, [1, 2, 3, 4], true)) {
                 $select->addOption($v, $k, array('disabled' => 'disabled'));
             } else {
                 $select->addOption($v, $k);

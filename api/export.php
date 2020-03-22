@@ -23,6 +23,7 @@
  */
 
 require_once(__DIR__ . '/../../../config.php');
+require_once(__DIR__ . '/../locallib.php');
 require_once(__DIR__ . '/../exportlib.php');
 require_once(__DIR__ . '/../form.php');
 
@@ -37,6 +38,21 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
 
     if ($data = $mform->get_data()) {
         switch ($data->type) {
+            case 5:
+                $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
+                $handle = fopen($temp_filepath, 'wb');
+                fputcsv($handle, ['ID курса', 'Название курса', LOCAL_STATSSIBSAU_COURSE_VIEWED['text'], LOCAL_STATSSIBSAU_MOD_FORUM_VIEWED['text']]);
+                local_statssibsau_export_student_activity(
+                        $handle,
+                        $data->categoryid,
+                        LOCAL_STATSSIBSAU_ROLE_STUDENT,
+                        $data->dbeg,
+                        $data->dend,
+                        [LOCAL_STATSSIBSAU_COURSE_VIEWED, LOCAL_STATSSIBSAU_MOD_FORUM_VIEWED]
+                );
+                fclose($handle);
+                local_statssibsau_file_csv_export($temp_filepath, LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type] . '.csv');
+                break;
             case 6:
                 $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
                 $handle = fopen($temp_filepath, 'wb');

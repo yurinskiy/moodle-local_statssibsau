@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+use core\event\course_viewed;
 
 /**
  * Library plugin
@@ -24,13 +25,83 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-define('LOCAL_STATSSIBSAU_TYPE_EXPORT',array(
-        1 => 'Ранжированная активность преподавателей',
-        2 => 'Вся активность преподавателей',
-        3 => 'Вся активность преподавателей курсов',
-        4 => 'Ранжированная активность студентов',
-        5 => 'Вся активность студентов',
+define('LOCAL_STATSSIBSAU_TYPE_EXPORT', array(
+        1 => 'Ранжированная активность преподавателей (не реализовано)',
+        2 => 'Вся активность преподавателей (не реализовано)',
+        3 => 'Вся активность преподавателей курсов (не реализовано)',
+        4 => 'Ранжированная активность студентов (не реализовано)',
+        5 => 'Вся активность студентов (в разработке)',
         6 => 'Список курсов',
+));
+
+define('LOCAL_STATSSIBSAU_COURSE_VIEWED', array(
+        'text' => 'Просмотр курса',
+        'component' => 'core',
+        'action' => 'viewed',
+        'target' => 'course',
+));
+
+define('LOCAL_STATSSIBSAU_MESSAGE_VIEWED', array(
+        'text' => 'Прочтение сообщения',
+        'component' => 'core',
+        'action' => 'viewed',
+        'target' => 'message',
+));
+
+define('LOCAL_STATSSIBSAU_MESSAGE_SENT', array(
+        'text' => 'Отправка сообщения',
+        'component' => 'core',
+        'action' => 'sent',
+        'target' => 'message',
+));
+
+define('LOCAL_STATSSIBSAU_MOD_FORUM_VIEWED', array(
+        'text' => 'Просмотр элемента курса "Форум"',
+        'component' => 'mod_forum',
+        'action' => 'viewed',
+        'target' => 'course_module',
+));
+
+define('LOCAL_STATSSIBSAU_MOD_FORUM_DISCUSSION_VIEWED', array(
+        'text' => 'Просмотр обсуждения в элементе курса "Форум"',
+        'component' => 'mod_forum',
+        'action' => 'viewed',
+        'target' => 'discussion',
+));
+
+define('LOCAL_STATSSIBSAU_MOD_CHAT_VIEWED', array(
+        'text' => 'Просмотр элемента курса "Чат"',
+        'component' => 'mod_chat',
+        'action' => 'viewed',
+        'target' => 'course_module',
+));
+
+define('LOCAL_STATSSIBSAU_MOD_CHAT_SENT', array(
+        'text' => 'Отправка сообщения в элементе курса "Чат"',
+        'component' => 'mod_chat',
+        'action' => 'sent',
+        'target' => 'message',
+));
+
+define('LOCAL_STATSSIBSAU_MOD_QUIZ_VIEWED', array(
+        'text' => 'Просмотр результатов теста',
+        'component' => 'mod_quiz',
+        'action' => 'viewed',
+        'target' => 'report',
+));
+
+define('LOCAL_STATSSIBSAU_MOD_ASSIGN_GRADED', array(
+        'text' => 'Оценивание задания',
+        'component' => 'mod_assign',
+        'action' => 'graded',
+        'target' => 'submission',
+));
+
+define('LOCAL_STATSSIBSAU_GRADED_VIEWED', array(
+        'text' => 'Просмотр журнала',
+        'component' => 'gradereport_grader',
+        'action' => 'viewed',
+        'target' => 'grade_report',
 ));
 
 /**
@@ -131,5 +202,54 @@ function local_statssibsau_export_list_courses($handle, int $categoryid, array $
 
     foreach ($categories as $category) {
         local_statssibsau_export_list_courses($handle, $category->id, $categorytree);
+    }
+}
+
+function local_statssibsau_export_student_activity($handle, int $categoryid, int $roleid, $dbeg, $dend, array $typelogs) {
+    global $DB;
+
+    $courses = $DB->get_records('course', [
+            'category' => $categoryid,
+            'visible' => 1,
+    ], 'sortorder', 'id, fullname, format');
+
+    foreach ($courses as $course) {
+        $fields = [];
+        $fields[] = $course->id;
+        $fields[] = $course->fullname;
+
+        $sql = '
+select count(*) from {logstore_standard_log} l
+where l.component = :component
+AND l.action = :action
+AND l.target = :target
+AND l.courseid = :courseid
+AND l.timecreated BETWEEN :dbeg AND :dend
+and l.contextlevel = :contextlevel
+and exists(select 1 from {role_assignments} a
+join mdl_user u on u.id = a.userid and u.username <> \'guest\'
+where a.roleid = :roleid and a.userid = l.userid and a.contextid = l.contextid)';
+
+        foreach ($typelogs as $typelog) {
+            $params = $typelog;
+            $params['roleid'] = $roleid;
+            $params['dbeg'] = $dbeg;
+            $params['dend'] = $dend;
+            $params['contextlevel'] = CONTEXT_COURSE;
+            $params['courseid'] = $course->id;
+
+            $fields[] = $DB->count_records_sql($sql, $params);
+        }
+
+        fputcsv($handle, $fields);
+    }
+
+    $categories = $DB->get_records('course_categories', [
+            'parent' => $categoryid,
+            'visible' => 1,
+    ], 'sortorder', 'id');
+
+    foreach ($categories as $category) {
+        local_statssibsau_export_student_activity($handle, $category->id, $roleid, $dbeg, $dend, $typelogs);
     }
 }
