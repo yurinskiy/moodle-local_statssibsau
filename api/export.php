@@ -39,9 +39,10 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
         switch ($data->type) {
             case 6:
                 $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
-                // флаг LOCK_EX для предотвращения записи данного файла кем-нибудь другим в данное время
-                file_put_contents($temp_filepath, 'ID курса, Название курса, Видимость курса, Видимость категории, Категория', LOCK_EX);
-                file_put_contents($temp_filepath, local_statssibsau_export_list_courses($data->categoryid), LOCK_EX);
+                $handle = fopen($temp_filepath, 'wb');
+                fputcsv($handle, ['ID курса', 'Название курса', 'Видимость курса', 'Видимость категории', 'Категория']);
+                local_statssibsau_export_list_courses($handle, $data->categoryid);
+                fclose($handle);
                 local_statssibsau_file_csv_export($temp_filepath, LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type] . '.csv');
                 break;
             default:
