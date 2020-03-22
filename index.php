@@ -22,28 +22,70 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('../../config.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/form.php');
+require_once(__DIR__ . '/locallib.php');
+require_once(__DIR__ . '/render.php');
+
+$categoryid = optional_param('categoryid', 0, PARAM_INT);
 
 $url = new moodle_url('/local/statssibsau/index.php');
-$context = context_system::instance();
+$systemcontext = $context = context_system::instance();
+if ($categoryid) {
+    $category = core_course_category::get($categoryid);
+    $context = context_coursecat::instance($category->id);
+    $url->param('categoryid', $category->id);
+}
+
+$pagetitle = get_string('pluginname', 'local_statssibsau');
+$pageheading = format_string($SITE->fullname, true, array('context' => $systemcontext));
 
 $PAGE->set_context($context);
 $PAGE->set_url($url);
-$PAGE->set_title(get_string('pluginname', 'local_statssibsau'));
+$PAGE->set_pagelayout('admin');
+$PAGE->set_title($pagetitle);
+$PAGE->set_heading($pageheading);
+
+$PAGE->requires->jquery();
+$PAGE->requires->js(new moodle_url('/local/statssibsau/js/module.js'));
+
+navigation_node::override_active_url($url);
+
+if ($categoryid) {
+    $PAGE->navbar->add(get_string('administrationsite'), new moodle_url('/admin/search.php'));
+    $PAGE->navbar->add(get_string('reports'), new moodle_url('/admin/category.php', array('category' => 'reports')));
+    $PAGE->navbar->add($pagetitle, new moodle_url('/local/statssibsau/index.php'));
+    $PAGE->navbar->add($category->name);
+}
 
 /** Проверяем авторизован ли пользователь */
 require_login();
 
 /** Проверяем права пользователя */
 if (!is_siteadmin() && !has_capability('local/statssibsau:view', $context)) {
-    header("Location: " . $CFG->wwwroot);
+    header('Location: ' . $CFG->wwwroot);
     die();
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('pluginname', 'local_statssibsau'));
+echo $OUTPUT->heading('Статистика по пользователями');
 
-echo 'Hi!';
+echo local_statssibsau_render_info_sites();
+
+echo $OUTPUT->heading(isset($category) ? 'Статистика по курсам для категории «' . $category->name . '»' : 'Статистика по курсам');
+
+$mform = new local_statssibsau_form_categories(null, array('categoryid' => $categoryid));
+$mform->display();
+
+echo local_statssibsau_render_info_courses($categoryid);
+
+echo $OUTPUT->heading('Экспорт');
+
+$mform = new local_statssibsau_form_teacher_actions(new moodle_url('/local/statssibsau/api/export.php'), array(
+        'categoryid' => $categoryid,
+        'dbeg' => LOCAL_STATSSIBSAU_DBEG,
+        'dend' => LOCAL_STATSSIBSAU_DEND,
+));
+$mform->display();
 
 echo $OUTPUT->footer();
-?>
