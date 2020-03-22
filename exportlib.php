@@ -82,19 +82,18 @@ function local_statssibsau_delete_temp_file($filepath) {
         unlink($filepath);
     }
 }
+
 /**
  * Export list course
  *
+ * @param $handle - Указатель на файл должен быть корректным и указывать на файл, успешно открытый функциями fopen()
  * @param int $categoryid
  * @param array $categorytree
- * @return string
  * @throws coding_exception
  * @throws dml_exception
  */
-function local_statssibsau_export_list_courses(int $categoryid, array $categorytree = []) {
+function local_statssibsau_export_list_courses($handle, int $categoryid, array $categorytree = []) {
     global $DB;
-
-    $result = '';
 
     if (0 === $categoryid) {
         $category = new stdClass();
@@ -113,17 +112,17 @@ function local_statssibsau_export_list_courses(int $categoryid, array $categoryt
     ], 'sortorder', 'id, fullname, visible');
 
     foreach ($courses as $course) {
-        $temp = [];
-        $temp[] = $course->id;
-        $temp[] = $course->fullname;
-        $temp[] = $course->visible ? 'Курс опубликован' : 'Курс скрыт';
-        $temp[] = $category->visible ? 'Категория опубликована' : 'Категория скрыта';
+        $fields = [];
+        $fields[] = $course->id;
+        $fields[] = $course->fullname;
+        $fields[] = $course->visible ? 'Курс опубликован' : 'Курс скрыт';
+        $fields[] = $category->visible ? 'Категория опубликована' : 'Категория скрыта';
 
         foreach ($categorytree as $v) {
-            $temp[] = $v;
+            $fields[] = $v;
         }
 
-        $result .= implode(',', $temp) . PHP_EOL;
+        fputcsv($handle, $fields);
     }
 
     $categories = $DB->get_records('course_categories', [
@@ -131,8 +130,6 @@ function local_statssibsau_export_list_courses(int $categoryid, array $categoryt
     ], 'sortorder', 'id');
 
     foreach ($categories as $category) {
-        $result .= local_statssibsau_export_list_courses($category->id, $categorytree);
+        local_statssibsau_export_list_courses($handle, $category->id, $categorytree);
     }
-
-    return $result;
 }
