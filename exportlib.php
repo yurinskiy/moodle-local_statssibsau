@@ -110,7 +110,7 @@ function local_statssibsau_export_list_courses(int $categoryid, array $categoryt
 
     $courses = $DB->get_records('course', [
             'category' => $categoryid
-    ], 'visible', 'id, fullname, visible');
+    ], 'sortorder', 'id, fullname, visible');
 
     foreach ($courses as $course) {
         $temp = [];
@@ -128,7 +128,7 @@ function local_statssibsau_export_list_courses(int $categoryid, array $categoryt
 
     $categories = $DB->get_records('course_categories', [
             'parent' => $categoryid
-    ], 'visible', 'id');
+    ], 'sortorder', 'id');
 
     foreach ($categories as $category) {
         $result .= local_statssibsau_export_list_courses($category->id, $categorytree);
