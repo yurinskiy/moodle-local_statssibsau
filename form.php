@@ -42,7 +42,7 @@ class local_statssibsau_form_categories extends moodleform {
 
         $options = array();
         $options[0] = get_string('top');
-        $options = array_merge($options, core_course_category::make_categories_list('moodle/category:manage'));
+        $options += core_course_category::make_categories_list('moodle/category:manage');
 
         $mform->addElement('select', 'categoryid', get_string('categories'), $options);
         $mform->setDefault('categoryid', $this->_customdata['categoryid']);
@@ -81,7 +81,7 @@ class local_statssibsau_form_teacher_actions extends moodleform {
 
         $options = array();
         $options[0] = get_string('top');
-        $options = array_merge($options, core_course_category::make_categories_list('moodle/category:manage'));
+        $options += core_course_category::make_categories_list('moodle/category:manage');
 
         $mform->addElement('select', 'categoryid', get_string('categories'), $options);
         $mform->setDefault('categoryid', $this->_customdata['categoryid']);
