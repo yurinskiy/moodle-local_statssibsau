@@ -7,13 +7,14 @@ $(document).ready(function () {
             url: $context.data('url'),
             beforeSend: function () {
                 $context.html('Загрузка...');
+                $context.attr('disabled', true);
             },
             success: function (data) {
                 $context.html(data.count);
-                $context.attr('disabled', true);
             },
             error: function () {
-                $context.html('Что-то пошло не так...')
+                $context.html('Что-то пошло не так...');
+                $context.attr('disabled', false);
             },
         });
     });
