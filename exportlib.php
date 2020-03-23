@@ -211,7 +211,7 @@ function local_statssibsau_export_student_activity($handle, int $categoryid, int
     $courses = $DB->get_records('course', [
             'category' => $categoryid,
             'visible' => 1,
-    ], 'sortorder', 'id, fullname, format');
+    ], 'sortorder', 'id, fullname');
 
     foreach ($courses as $course) {
         $fields = [];
@@ -227,11 +227,14 @@ AND l.courseid = :courseid
 AND l.timecreated BETWEEN :dbeg AND :dend
 and l.contextlevel = :contextlevel
 and exists(select 1 from {role_assignments} a
-join mdl_user u on u.id = a.userid and u.username <> \'guest\'
+join {user} u on u.id = a.userid and u.username <> \'guest\'
 where a.roleid = :roleid and a.userid = l.userid and a.contextid = l.contextid)';
 
         foreach ($typelogs as $typelog) {
-            $params = $typelog;
+            $params = [];
+            $params['component'] = $typelog['component'];
+            $params['action'] = $typelog['action'];
+            $params['target'] = $typelog['target'];
             $params['roleid'] = $roleid;
             $params['dbeg'] = $dbeg;
             $params['dend'] = $dend;

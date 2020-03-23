@@ -147,14 +147,9 @@ function local_statssibsau_count_courses($category = 0) {
             $result->student =
                     merge($result->student, local_statssibsau_users_have_role(LOCAL_STATSSIBSAU_ROLE_STUDENT, $record->id));
 
-            $records = array_map(static function($a, $b) {
-                if ($a === $b) {
-                    return $a;
-                }
-                return [$a, $b];
-            }, $records, $DB->get_records('course_categories', [
+            $records += $DB->get_records('course_categories', [
                     'parent' => $record->id
-            ]));
+            ]);
         }
 
         $result->teacher = count(array_unique($result->teacher));
