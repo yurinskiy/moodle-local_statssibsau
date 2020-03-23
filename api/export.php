@@ -37,6 +37,9 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
     $mform = new local_statssibsau_form_teacher_actions();
 
     if ($data = $mform->get_data()) {
+        //Сохраняем файл сессии
+        session_write_close();
+
         switch ($data->type) {
             case 2:
                 $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
