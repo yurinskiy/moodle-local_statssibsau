@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-use core\event\course_viewed;
 
 /**
  * Library plugin
@@ -26,11 +25,11 @@ use core\event\course_viewed;
 defined('MOODLE_INTERNAL') || die;
 
 define('LOCAL_STATSSIBSAU_TYPE_EXPORT', array(
-        1 => 'Ранжированная активность преподавателей (не реализовано)',
-        2 => 'Вся активность преподавателей (не реализовано)',
+        1 => 'Ранжированная активность преподавателей по курсам (не реализовано)',
+        2 => 'Вся активность преподавателей по курсам (в разработке)',
         3 => 'Вся активность преподавателей курсов (не реализовано)',
-        4 => 'Ранжированная активность студентов (не реализовано)',
-        5 => 'Вся активность студентов (в разработке)',
+        4 => 'Ранжированная активность студентов по курсам (не реализовано)',
+        5 => 'Вся активность студентов по курсам (в разработке)',
         6 => 'Список курсов',
 ));
 
@@ -255,4 +254,12 @@ where a.roleid = :roleid and a.userid = l.userid and a.contextid = l.contextid)'
     foreach ($categories as $category) {
         local_statssibsau_export_student_activity($handle, $category->id, $roleid, $dbeg, $dend, $typelogs);
     }
+}
+
+function local_statssibsau_export_prepare_header_csv(array $header, array $events) {
+    foreach ($events as $event) {
+        $header[] = $event['text'];
+    }
+
+    return $header;
 }
