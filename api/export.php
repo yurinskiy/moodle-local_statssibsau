@@ -23,6 +23,7 @@
  */
 
 require_once(__DIR__ . '/../../../config.php');
+require_once($CFG->libdir . '/csvlib.class.php');
 require_once(__DIR__ . '/../locallib.php');
 require_once(__DIR__ . '/../exportlib.php');
 require_once(__DIR__ . '/../form.php');
@@ -40,71 +41,66 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
         //Сохраняем файл сессии
         session_write_close();
 
+        $data->events = local_statssibsau_get_array_events($data->events);
+
+        $csvexport = new csv_export_writer('commer');
+        if (isset(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]) &&
+                array_key_exists('text', LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type])) {
+            $csvexport->set_filename(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]['text']);
+        }
+
         switch ($data->type) {
             case 2:
-                $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
-                $handle = fopen($temp_filepath, 'wb');
-
-                $events = [
-                        LOCAL_STATSSIBSAU_COURSE_VIEWED,
-                        LOCAL_STATSSIBSAU_GRADED_VIEWED,
-                        LOCAL_STATSSIBSAU_MOD_ASSIGN_GRADED,
-                        LOCAL_STATSSIBSAU_MOD_QUIZ_VIEWED,
-                        LOCAL_STATSSIBSAU_MOD_FORUM_VIEWED,
-                        LOCAL_STATSSIBSAU_MOD_FORUM_DISCUSSION_VIEWED,
-                        LOCAL_STATSSIBSAU_MOD_CHAT_SENT,
-                        LOCAL_STATSSIBSAU_MOD_CHAT_VIEWED,
-                        LOCAL_STATSSIBSAU_MESSAGE_VIEWED,
-                        LOCAL_STATSSIBSAU_MESSAGE_SENT,
-                ];
-
-                $header = local_statssibsau_export_prepare_header_csv(['ID курса', 'Название курса'], $events);
-                fputcsv($handle, $header);
-                local_statssibsau_export_student_activity(
-                        $handle,
+                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID курса', 'Название курса'], $data->events));
+                foreach (local_statssibsau_user_activity(
+                        $data->categoryid,
+                        LOCAL_STATSSIBSAU_ROLE_TEACHER,
+                        null,
+                        $data->dbeg,
+                        $data->dend,
+                        $data->events
+                ) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
+            case 5:
+                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID курса', 'Название курса'], $data->events));
+                foreach (local_statssibsau_user_activity(
+                        $data->categoryid,
+                        LOCAL_STATSSIBSAU_ROLE_STUDENT,
+                        null,
+                        $data->dbeg,
+                        $data->dend,
+                        $data->events
+                ) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
+            case 6:
+                $csvexport->add_data(['ID курса', 'Название курса', 'Видимость курса', 'Видимость категории', 'Категория']);
+                foreach (local_statssibsau_list_courses($data->categoryid) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
+            case 7:
+                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID преподавателя', 'Email', 'ФИО'], $data->events));
+                foreach (local_statssibsau_list_users(
                         $data->categoryid,
                         LOCAL_STATSSIBSAU_ROLE_TEACHER,
                         $data->dbeg,
                         $data->dend,
-                        $events
-                );
-                fclose($handle);
-                local_statssibsau_file_csv_export($temp_filepath, LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type] . '.csv');
-                break;
-            case 5:
-                $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
-                $handle = fopen($temp_filepath, 'wb');
-
-                $events = [
-                        LOCAL_STATSSIBSAU_COURSE_VIEWED,
-                        LOCAL_STATSSIBSAU_MOD_FORUM_VIEWED,
-                ];
-
-                $header = local_statssibsau_export_prepare_header_csv(['ID курса', 'Название курса'], $events);
-                fputcsv($handle, $header);
-                local_statssibsau_export_student_activity(
-                        $handle,
-                        $data->categoryid,
-                        LOCAL_STATSSIBSAU_ROLE_STUDENT,
-                        $data->dbeg,
-                        $data->dend,
-                        $events
-                );
-                fclose($handle);
-                local_statssibsau_file_csv_export($temp_filepath, LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type] . '.csv');
-                break;
-            case 6:
-                $temp_filepath = tempnam(sys_get_temp_dir(), 'exp');
-                $handle = fopen($temp_filepath, 'wb');
-                fputcsv($handle, ['ID курса', 'Название курса', 'Видимость курса', 'Видимость категории', 'Категория']);
-                local_statssibsau_export_list_courses($handle, $data->categoryid);
-                fclose($handle);
-                local_statssibsau_file_csv_export($temp_filepath, LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type] . '.csv');
+                        $data->events
+                ) as $data) {
+                    $csvexport->add_data($data);
+                }
                 break;
             default:
                 echo 'В разработке...';
+                $csvexport->add_data(['В разработке...']);
                 die();
         }
+
+        $csvexport->download_file();
     }
 }
 

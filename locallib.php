@@ -229,6 +229,57 @@ SELECT COUNT(DISTINCT u.id)
 
 /**
  * @param int $courserole
+ * @param int $categoryid
+ * @return array
+ * @throws dml_exception
+ */
+function local_statssibsau_users_information_by_role_category($courserole, $categoryid = 0) {
+    global $DB;
+    $sql = '
+SELECT DISTINCT u.id, u.email, u.firstname, u.lastname 
+  FROM {user} u 
+ WHERE u.username <> \'guest\'
+   AND u.suspended = :suspended 
+   AND EXISTS(
+       SELECT 1 userid
+         FROM {role_assignments} a
+   INNER JOIN {context} b ON a.contextid=b.id
+   INNER JOIN {course} c ON b.instanceid=c.id AND (c.category = :category OR 0 = :main_category)
+        WHERE a.userid = u.id 
+          AND b.contextlevel = :contextlevel
+          AND a.roleid = :courserole
+   )';
+
+    $params = [
+            'suspended' => 0,
+            'contextlevel' => CONTEXT_COURSE,
+            'courserole' => $courserole,
+            'category' => $categoryid,
+            'main_category' => $categoryid,
+    ];
+
+    $result = $DB->get_records_sql($sql, $params);
+
+    if ($categoryid > 0) {
+        $categories = $DB->get_records('course_categories', [
+                'parent' => $categoryid,
+                'visible' => 1,
+        ], 'sortorder', 'id');
+
+        foreach ($categories as $category) {
+            foreach (local_statssibsau_users_information_by_role_category($courserole, $category->id) as $user) {
+                if (!array_key_exists($user->id, $result)) {
+                    $result[] = $user;
+                }
+            }
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * @param int $courserole
  * @param $category
  * @return array
  * @throws dml_exception
@@ -244,8 +295,7 @@ SELECT DISTINCT u.id
        SELECT 1
          FROM {role_assignments} a
    INNER JOIN {context} b ON a.contextid=b.id
-   INNER JOIN {course} c ON b.instanceid=c.id
-   INNER JOIN {course_categories} cc ON cc.id = c.category AND cc.id = :category
+   INNER JOIN {course} c ON b.instanceid=c.id AND c.category = :category
         WHERE a.userid = u.id 
           AND b.contextlevel = :contextlevel
           AND a.roleid = :courserole
@@ -265,9 +315,293 @@ SELECT DISTINCT u.id
     }, $result);
 }
 
+/**
+ * Export list course
+ *
+ * @param int $categoryid
+ * @param array $categorytree
+ * @return array
+ * @throws coding_exception
+ * @throws dml_exception
+ */
+function local_statssibsau_list_courses(int $categoryid, array $categorytree = []) {
+    global $DB;
+
+    $result = [];
+
+    if (0 === $categoryid) {
+        $category = new stdClass();
+        $category->name = get_string('top');
+        $category->visible = 1;
+    } else {
+        $category = $DB->get_record('course_categories', [
+                'id' => $categoryid
+        ], 'name, visible');
+    }
+
+    $categorytree[] = $category->name;
+
+    $courses = $DB->get_records('course', [
+            'category' => $categoryid
+    ], 'sortorder', 'id, fullname, visible');
+
+    foreach ($courses as $course) {
+        $fields = [];
+        $fields[] = $course->id;
+        $fields[] = $course->fullname;
+        $fields[] = $course->visible ? 'Курс опубликован' : 'Курс скрыт';
+        $fields[] = $category->visible ? 'Категория опубликована' : 'Категория скрыта';
+
+        foreach ($categorytree as $v) {
+            $fields[] = $v;
+        }
+
+        $result[] = $fields;
+    }
+
+    $categories = $DB->get_records('course_categories', [
+            'parent' => $categoryid
+    ], 'sortorder', 'id');
+
+    foreach ($categories as $category) {
+        $result = merge($result, local_statssibsau_list_courses($category->id, $categorytree));
+    }
+
+    return $result;
+}
+
+/**
+ * Получаем данные по активности пользователей
+ *
+ * @param int $categoryid
+ * @param int $roleid
+ * @param int $userid
+ * @param $dbeg
+ * @param $dend
+ * @param array $events
+ * @return array
+ * @throws dml_exception
+ */
+function local_statssibsau_user_activity(int $categoryid, int $roleid, $userid, $dbeg, $dend, array $events) {
+    global $DB;
+
+    $result = [];
+
+    $courses = $DB->get_records('course', [
+            'category' => $categoryid,
+            'visible' => 1,
+    ], 'sortorder', 'id, fullname');
+
+    foreach ($courses as $course) {
+        $fields = [];
+        $fields['idcourse'] = $course->id;
+        $fields['coursename'] = $course->fullname;
+
+        $sql = '
+select count(*) from {logstore_standard_log} l
+where l.component = :component
+AND l.action = :action
+AND l.target = :target
+AND l.courseid = :courseid
+AND l.timecreated BETWEEN :dbeg AND :dend
+and l.contextlevel = :contextlevel
+and exists(
+SELECT 1
+     FROM {role_assignments} a
+INNER JOIN {context} b ON a.contextid=b.id
+INNER JOIN {course} c ON b.instanceid=c.id
+    WHERE a.userid = l.userid 
+      AND a.contextid = l.contextid
+      AND c.id = l.courseid
+      AND a.roleid = :roleid)';
+
+        if (null !== $userid) {
+            $sql .= ' and l.userid = :userid';
+        }
+
+
+        foreach ($events as $key => $event) {
+            $params = [];
+            $params['component'] = $event['component'];
+            $params['action'] = $event['action'];
+            $params['target'] = $event['target'];
+            $params['roleid'] = $roleid;
+            $params['dbeg'] = $dbeg;
+            $params['dend'] = $dend;
+            $params['contextlevel'] = CONTEXT_COURSE;
+            $params['courseid'] = $course->id;
+
+            if (null !== $userid) {
+                $params['userid'] = $userid;
+            }
+
+            $fields[$key] = $DB->count_records_sql($sql, $params);
+        }
+
+        $result[] = $fields;
+    }
+
+    $categories = $DB->get_records('course_categories', [
+            'parent' => $categoryid,
+            'visible' => 1,
+    ], 'sortorder', 'id');
+
+    foreach ($categories as $category) {
+        $result = merge($result, local_statssibsau_user_activity($category->id, $roleid, $userid, $dbeg, $dend, $events));
+    }
+
+    return $result;
+}
+
+function local_statssibsau_user_activity_global(int $roleid, $userid, $dbeg, $dend, array $events) {
+    global $DB;
+
+    $result = [];
+
+    $sql = '
+select count(*) from {logstore_standard_log} l
+where l.component = :component
+AND l.action = :action
+AND l.target = :target
+AND l.timecreated BETWEEN :dbeg AND :dend
+and exists(
+SELECT 1
+     FROM {role_assignments} a
+INNER JOIN {context} b ON a.contextid=b.id
+    WHERE a.userid = l.userid 
+      AND a.contextid = l.contextid
+      AND a.roleid = :roleid)';
+
+    if (null !== $userid) {
+        $sql .= ' and l.userid = :userid';
+    }
+
+    foreach ($events as $key => $event) {
+        $params = [];
+        $params['roleid'] = $roleid;
+        $params['dbeg'] = $dbeg;
+        $params['dend'] = $dend;
+        $params['component'] = $event['component'];
+        $params['action'] = $event['action'];
+        $params['target'] = $event['target'];
+
+        if (null !== $userid) {
+            $params['userid'] = $userid;
+        }
+
+        $result[$key] = $DB->count_records_sql($sql, $params);
+    }
+
+    return $result;
+}
+
+function local_statssibsau_list_users($categoryid, $roleid, $dbeg, $dend, array $events) {
+    global $DB;
+
+    $result = [];
+
+    if (0 === (int) $categoryid) {
+        $users = local_statssibsau_users_information_by_role_category($roleid);
+
+        foreach ($users as $user) {
+            // Если пользователей не новый, то пропускаем мы его уже посчитали
+            if (array_key_exists($user->id, $result)) {
+                continue;
+            }
+
+            $temp = [];
+            $temp['id'] = $user->id;
+            $temp['email'] = $user->email;
+            $temp['fio'] = trim($user->firstname . ' ' . $user->lastname);
+
+            foreach (local_statssibsau_user_activity_global($roleid, $user->id, $dbeg, $dend, $events) as $key => $cnt) {
+                $temp[$key] = $cnt;
+            }
+
+            $result[$user->id] = $temp;
+        }
+
+    } else {
+        $users = local_statssibsau_users_information_by_role_category($roleid, $categoryid);
+
+        foreach ($users as $user) {
+            // Если пользователей не новый, то пропускаем мы его уже посчитали
+            if (array_key_exists($user->id, $result)) {
+                continue;
+            }
+
+            $temp = [];
+            $temp['id'] = $user->id;
+            $temp['email'] = $user->email;
+            $temp['fio'] = trim($user->firstname . ' ' . $user->lastname);
+
+            foreach (local_statssibsau_user_activity($categoryid, $roleid, $user->id, $dbeg, $dend, $events) as $key => $course) {
+                foreach ($course as $k => $cnt) {
+                    if (!is_numeric($k)) {
+                        continue;
+                    }
+                    // Складываем разрозненную статистику по курсам
+                    if (array_key_exists($k, $temp)) {
+                        $temp[$k] += $cnt;
+                    } else {
+                        $temp[$k] = $cnt;
+                    }
+                }
+            }
+
+            $result[$user->id] = $temp;
+        }
+
+        $categories = $DB->get_records('course_categories', [
+                'parent' => $categoryid
+        ]);
+        foreach ($categories as $category) {
+            $result = addNewUsers($result, local_statssibsau_list_users($category->id, $roleid, $dbeg, $dend, $events));
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Объединяет массивы
+ *
+ * @param $a
+ * @param $b
+ * @return array
+ */
 function merge($a, $b) {
-    foreach ($b as $arr) {
+    foreach ($b as $key => $arr) {
         $a[] = $arr;
+        unset($b[$key]);
     }
     return $a;
 }
+
+/**
+ * Объединяет массивы пользователей
+ *
+ * @param $a
+ * @param $b
+ * @return array
+ */
+function addNewUsers($a, $b) {
+    foreach ($b as $key => $data) {
+        if (!array_key_exists($key, $a)) {
+            $a[$key] = $data;
+        }
+
+        unset($b[$key]);
+    }
+
+    return $a;
+}
+
+/*function ddd(...$arg) {
+    echo '<pre>';
+    foreach ($arg as $key => $item) {
+        echo print_r($key, true), PHP_EOL;
+        echo print_r($item, true);
+    }
+    echo '</pre>';
+}*/
