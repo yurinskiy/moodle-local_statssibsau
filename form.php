@@ -27,6 +27,8 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir . '/formslib.php');
 require_once (__DIR__ . '/exportlib.php');
 
+define('LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE', 'coursesizebutton');
+
 /**
  * This class is form course categories
  *
@@ -47,7 +49,12 @@ class local_statssibsau_form_categories extends moodleform {
         $mform->addElement('select', 'categoryid', get_string('categories'), $options);
         $mform->setDefault('categoryid', $this->_customdata['categoryid']);
 
-        $this->add_action_buttons(false, 'Отфильтровать');
+
+        $buttonarray=array();
+        $buttonarray[] = &$mform->createElement('submit', 'submitbutton', 'Отфильтровать');
+        $buttonarray[] = &$mform->createElement('submit', LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE, 'Показать размер курсов');
+        $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
+        $mform->closeHeaderBefore('buttonar');
     }
 }
 
