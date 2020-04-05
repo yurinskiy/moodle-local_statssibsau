@@ -67,6 +67,12 @@ if (!is_siteadmin() && !has_capability('local/statssibsau:view', $context)) {
     die();
 }
 
+$mform = new local_statssibsau_form_categories(null, array('categoryid' => $categoryid));
+if (property_exists($mform->get_submitted_data(),LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE)) {
+    redirect(new moodle_url('/report/coursesize/index.php', ['category' => $mform->get_submitted_data()->categoryid]));
+    die();
+}
+
 echo $OUTPUT->header();
 echo $OUTPUT->heading('Статистика по пользователями');
 
@@ -74,7 +80,6 @@ echo local_statssibsau_render_info_sites();
 
 echo $OUTPUT->heading(isset($category) ? 'Статистика по курсам для категории «' . $category->name . '»' : 'Статистика по курсам');
 
-$mform = new local_statssibsau_form_categories(null, array('categoryid' => $categoryid));
 $mform->display();
 
 echo local_statssibsau_render_info_courses($categoryid);
