@@ -265,9 +265,148 @@ SELECT DISTINCT u.id
     }, $result);
 }
 
+/**
+ * Export list course
+ *
+ * @param int $categoryid
+ * @param array $categorytree
+ * @return array
+ * @throws coding_exception
+ * @throws dml_exception
+ */
+function local_statssibsau_list_courses(int $categoryid, array $categorytree = []) {
+    global $DB;
+
+    $result = [];
+
+    if (0 === $categoryid) {
+        $category = new stdClass();
+        $category->name = get_string('top');
+        $category->visible = 1;
+    } else {
+        $category = $DB->get_record('course_categories', [
+                'id' => $categoryid
+        ], 'name, visible');
+    }
+
+    $categorytree[] = $category->name;
+
+    $courses = $DB->get_records('course', [
+            'category' => $categoryid
+    ], 'sortorder', 'id, fullname, visible');
+
+    foreach ($courses as $course) {
+        $fields = [];
+        $fields[] = $course->id;
+        $fields[] = $course->fullname;
+        $fields[] = $course->visible ? 'Курс опубликован' : 'Курс скрыт';
+        $fields[] = $category->visible ? 'Категория опубликована' : 'Категория скрыта';
+
+        foreach ($categorytree as $v) {
+            $fields[] = $v;
+        }
+
+        $result[] = $fields;
+    }
+
+    $categories = $DB->get_records('course_categories', [
+            'parent' => $categoryid
+    ], 'sortorder', 'id');
+
+    foreach ($categories as $category) {
+        $result = merge($result, local_statssibsau_list_courses($category->id, $categorytree));
+    }
+
+    return $result;
+}
+
+/**
+ * Получаем данные по активности пользователей
+ *
+ * @param int $categoryid
+ * @param int $roleid
+ * @param int $userid
+ * @param $dbeg
+ * @param $dend
+ * @param array $events
+ * @return array
+ * @throws dml_exception
+ */
+function local_statssibsau_user_activity(int $categoryid, int $roleid, $userid, $dbeg, $dend, array $events) {
+    global $DB;
+
+    $result = [];
+
+    $courses = $DB->get_records('course', [
+            'category' => $categoryid,
+            'visible' => 1,
+    ], 'sortorder', 'id, fullname');
+
+    foreach ($courses as $course) {
+        $fields = [];
+        $fields[] = $course->id;
+        $fields[] = $course->fullname;
+
+        $sql = '
+select count(*) from {logstore_standard_log} l
+where l.component = :component
+AND l.action = :action
+AND l.target = :target
+AND l.courseid = :courseid
+AND l.timecreated BETWEEN :dbeg AND :dend
+and l.contextlevel = :contextlevel
+and exists(select 1 from {role_assignments} a
+join {user} u on u.id = a.userid and u.username <> \'guest\'
+where a.roleid = :roleid and a.userid = l.userid and a.contextid = l.contextid)';
+
+        if (null !== $userid) {
+            $sql .= ' and l.userid = :userid';
+        }
+
+        foreach ($events as $event) {
+            $params = [];
+            $params['component'] = $event['component'];
+            $params['action'] = $event['action'];
+            $params['target'] = $event['target'];
+            $params['roleid'] = $roleid;
+            $params['dbeg'] = $dbeg;
+            $params['dend'] = $dend;
+            $params['contextlevel'] = CONTEXT_COURSE;
+            $params['courseid'] = $course->id;
+
+            if (null !== $userid) {
+                $params['userid'] .= $userid;
+            }
+
+            $fields[] = $DB->count_records_sql($sql, $params);
+        }
+
+        $result[] = $fields;
+    }
+
+    $categories = $DB->get_records('course_categories', [
+            'parent' => $categoryid,
+            'visible' => 1,
+    ], 'sortorder', 'id');
+
+    foreach ($categories as $category) {
+        $result = merge($result, local_statssibsau_user_activity($category->id, $roleid, $userid, $dbeg, $dend, $events));
+    }
+
+    return $result;
+}
+
+/**
+ * Объединяет массивы
+ *
+ * @param $a
+ * @param $b
+ * @return array
+ */
 function merge($a, $b) {
-    foreach ($b as $arr) {
+    foreach ($b as $key => $arr) {
         $a[] = $arr;
+        unset($b[$key]);
     }
     return $a;
 }
