@@ -30,7 +30,7 @@ define('LOCAL_STATSSIBSAU_TYPE_EXPORT', array(
                 'disabled' => true,
         ),
         2 => array(
-                'text' => 'Вся активность преподавателей по курсам (в разработке)',
+                'text' => 'Вся активность преподавателей по курсам',
                 'disabled' => false,
         ),
         3 => array(
@@ -42,13 +42,17 @@ define('LOCAL_STATSSIBSAU_TYPE_EXPORT', array(
                 'disabled' => true,
         ),
         5 => array(
-                'text' => 'Вся активность студентов по курсам (в разработке)',
+                'text' => 'Вся активность студентов по курсам',
                 'disabled' => false,
         ),
         6 => array(
                 'text' => 'Список курсов',
                 'disabled' => false,
         ),
+        7 => array(
+                'text' => 'Вся активность по преподавателям',
+                'disabled' => false,
+        )
 ));
 
 define('LOCAL_STATSSIBSAU_EVENTS', array(

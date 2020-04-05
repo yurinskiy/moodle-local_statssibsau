@@ -82,9 +82,22 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                     $csvexport->add_data($data);
                 }
                 break;
+            case 7:
+                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID преподавателя', 'Email', 'ФИО'], $data->events));
+                foreach (local_statssibsau_list_users(
+                        $data->categoryid,
+                        LOCAL_STATSSIBSAU_ROLE_TEACHER,
+                        $data->dbeg,
+                        $data->dend,
+                        $data->events
+                ) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
             default:
                 echo 'В разработке...';
-                exit(1);
+                $csvexport->add_data(['В разработке...']);
+                die();
         }
 
         $csvexport->download_file();
