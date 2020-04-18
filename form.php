@@ -117,6 +117,8 @@ class local_statssibsau_form_teacher_actions extends moodleform {
         $mform->addElement('date_time_selector', 'dend', get_string('to'));
         $mform->setDefault('dend', $this->_customdata['dend']);
 
+        $mform->addElement('checkbox', 'namecsv', 'Изменить имя экспортируемого файла на имя категории курсов');
+
         // Правила
         //$mform->addRule('type', 'Выберите тип выгрузки', 'required', null, 'client');
 

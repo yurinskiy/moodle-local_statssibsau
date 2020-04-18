@@ -42,7 +42,21 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
         session_write_close();
 
         $csvexport = new csv_export_writer('commer');
-        if (isset(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]) &&
+
+        // Устанавливаем имя файла согласно категории выгрузки статистики
+        if (isset($data->namecsv) && $data->namecsv) {
+            if ($data->categoryid > 0) {
+                $category = $DB->get_record('course_categories', [
+                        'id' => $data->categoryid,
+                ]);
+            } else {
+                $category = new stdClass();
+                $category->name = 'Верхний уровень';
+            }
+
+            $csvexport->set_filename($category->name);
+        } // Устанавливаем имя файла согласно типу выгрузки статистики
+        else if (isset(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]) &&
                 array_key_exists('text', LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type])) {
             $csvexport->set_filename(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]['text']);
         }
