@@ -343,7 +343,7 @@ function local_statssibsau_list_courses(int $categoryid, array $categorytree = [
 
     $courses = $DB->get_records('course', [
             'category' => $categoryid
-    ], 'sortorder', 'id, fullname, visible');
+    ], 'sortorder', 'id, shortname, fullname, visible');
 
     foreach ($courses as $course) {
         $fields = [];
