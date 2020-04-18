@@ -348,6 +348,7 @@ function local_statssibsau_list_courses(int $categoryid, array $categorytree = [
     foreach ($courses as $course) {
         $fields = [];
         $fields[] = $course->id;
+        $fields[] = $course->shortname;
         $fields[] = $course->fullname;
         $fields[] = $course->visible ? 'Курс опубликован' : 'Курс скрыт';
         $fields[] = $category->visible ? 'Категория опубликована' : 'Категория скрыта';

@@ -77,14 +77,16 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                 }
                 break;
             case 6:
-                $csvexport->add_data(['ID курса', 'Название курса', 'Видимость курса', 'Видимость категории', 'Категория']);
+                $csvexport->add_data(['ID курса', 'Краткое название курса', 'Полное название курса', 'Видимость курса',
+                        'Видимость категории', 'Категория']);
                 foreach (local_statssibsau_list_courses($data->categoryid) as $data) {
                     $csvexport->add_data($data);
                 }
                 break;
             case 7:
                 $data->events = local_statssibsau_get_array_events($data->events);
-                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID преподавателя', 'Email', 'ФИО'], $data->events));
+                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID преподавателя', 'Email', 'ФИО'],
+                        $data->events));
                 foreach (local_statssibsau_list_users(
                         $data->categoryid,
                         LOCAL_STATSSIBSAU_ROLE_TEACHER,
