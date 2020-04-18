@@ -68,8 +68,16 @@ if (!is_siteadmin() && !has_capability('local/statssibsau:view', $context)) {
 }
 
 $mform = new local_statssibsau_form_categories(null, array('categoryid' => $categoryid));
-if ($mform->get_data() && property_exists($mform->get_data(),LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE)) {
+if ($mform->get_data() && property_exists($mform->get_data(), LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE)) {
     redirect(new moodle_url('/report/coursesize/index.php', ['category' => $mform->get_data()->categoryid]));
+    die();
+}
+
+if ($mform->get_data() && property_exists($mform->get_data(), LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE_DOWNLOAD)) {
+    redirect(new moodle_url('/report/coursesize/index.php', [
+            'category' => $mform->get_data()->categoryid,
+            'download' => 1
+    ]));
     die();
 }
 

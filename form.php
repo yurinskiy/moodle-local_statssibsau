@@ -28,6 +28,7 @@ require_once($CFG->libdir . '/formslib.php');
 require_once(__DIR__ . '/exportlib.php');
 
 define('LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE', 'coursesizebutton');
+define('LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE_DOWNLOAD', 'coursesizedownloadbutton');
 
 /**
  * This class is form course categories
@@ -53,6 +54,8 @@ class local_statssibsau_form_categories extends moodleform {
         $buttonarray[] = &$mform->createElement('submit', 'submitbutton', 'Отфильтровать');
         $buttonarray[] = &
                 $mform->createElement('submit', LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE, 'Показать размер курсов');
+        $buttonarray[] = &
+                $mform->createElement('submit', LOCAL_STATSSIBSAU_REDIRECT_TO_REPORT_COURSESIZE_DOWNLOAD, 'Экспортировать размер курсов');
         $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
         $mform->closeHeaderBefore('buttonar');
     }
