@@ -111,6 +111,19 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                     $csvexport->add_data($data);
                 }
                 break;
+            case 8:
+                $csvexport->add_data(['ID курса', 'Краткое название курса', 'Полное название курса', 'Видимость курса',
+                        'Видимость категории', 'Категория']);
+                foreach (local_statssibsau_list_empty_courses($data->categoryid) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
+            case 9:
+                $csvexport->add_data(['Количество пустых курсов', 'Категория']);
+                foreach (local_statssibsau_list_empty_courses_short($data->categoryid) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
             default:
                 echo 'В разработке...';
                 $csvexport->add_data(['В разработке...']);
