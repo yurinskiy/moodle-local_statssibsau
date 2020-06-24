@@ -343,11 +343,12 @@ function local_statssibsau_list_courses(int $categoryid, array $categorytree = [
 
     $courses = $DB->get_records('course', [
             'category' => $categoryid
-    ], 'sortorder', 'id, fullname, visible');
+    ], 'sortorder', 'id, shortname, fullname, visible');
 
     foreach ($courses as $course) {
         $fields = [];
         $fields[] = $course->id;
+        $fields[] = $course->shortname;
         $fields[] = $course->fullname;
         $fields[] = $course->visible ? 'Курс опубликован' : 'Курс скрыт';
         $fields[] = $category->visible ? 'Категория опубликована' : 'Категория скрыта';
@@ -558,6 +559,105 @@ function local_statssibsau_list_users($categoryid, $roleid, $dbeg, $dend, array 
         foreach ($categories as $category) {
             $result = addNewUsers($result, local_statssibsau_list_users($category->id, $roleid, $dbeg, $dend, $events));
         }
+    }
+
+    return $result;
+}
+
+function local_statssibsau_list_empty_courses($categoryid, $categorytree = []) {
+    global $DB;
+
+    $result = [];
+
+    if (0 === $categoryid) {
+        $category = new stdClass();
+        $category->name = get_string('top');
+        $category->visible = 1;
+    } else {
+        $category = $DB->get_record('course_categories', [
+                'id' => $categoryid
+        ], 'name, visible');
+    }
+
+    $categorytree[] = $category->name;
+
+    $courses = $DB->get_records('course', [
+            'category' => $categoryid
+    ], 'sortorder', 'id, shortname, fullname, visible');
+
+    foreach ($courses as $course) {
+        $count = $DB->count_records('course_modules', [
+                'course' => $course->id,
+        ]);
+
+        if ($count > 0) {
+            continue;
+        }
+
+        $fields = [];
+        $fields[] = $course->id;
+        $fields[] = $course->shortname;
+        $fields[] = $course->fullname;
+        $fields[] = $course->visible ? 'Курс опубликован' : 'Курс скрыт';
+        $fields[] = $category->visible ? 'Категория опубликована' : 'Категория скрыта';
+
+        foreach ($categorytree as $v) {
+            $fields[] = $v;
+        }
+
+        $result[] = $fields;
+    }
+
+    $categories = $DB->get_records('course_categories', [
+            'parent' => $categoryid
+    ], 'sortorder', 'id');
+
+    foreach ($categories as $category) {
+        $result = merge($result, local_statssibsau_list_empty_courses($category->id, $categorytree));
+    }
+
+    return $result;
+}
+
+
+function local_statssibsau_list_empty_courses_short($categoryid, $categorytree = []) {
+    global $DB;
+
+    $result = [];
+
+    if (0 === $categoryid) {
+        $category = new stdClass();
+        $category->name = get_string('top');
+        $category->visible = 1;
+    } else {
+        $category = $DB->get_record('course_categories', [
+                'id' => $categoryid
+        ], 'name, visible');
+    }
+
+    $categorytree[] = $category->name;
+
+    $count = $DB->count_records_sql('select count(c.id) from {course} c where c.category = :category and not exists(select 1 from {course_modules} m where m.course = c.id)', [
+            'category' => $categoryid
+    ]);
+
+    $fields = [];
+
+    $fields[] = $count;
+
+    foreach ($categorytree as $v) {
+        $fields[] = $v;
+    }
+
+    $result[] = $fields;
+
+
+    $categories = $DB->get_records('course_categories', [
+            'parent' => $categoryid
+    ], 'sortorder', 'id');
+
+    foreach ($categories as $category) {
+        $result = merge($result, local_statssibsau_list_empty_courses_short($category->id, $categorytree));
     }
 
     return $result;

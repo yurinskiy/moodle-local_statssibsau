@@ -52,6 +52,14 @@ define('LOCAL_STATSSIBSAU_TYPE_EXPORT', array(
         7 => array(
                 'text' => 'Вся активность по преподавателям',
                 'disabled' => false,
+        ),
+        8 => array(
+                'text' => 'Информация о пустых курсах',
+                'disabled' => false,
+        ),
+        9 => array(
+                'text' => 'Информация о пустых курсах (кратко)',
+                'disabled' => false,
         )
 ));
 

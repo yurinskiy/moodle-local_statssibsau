@@ -41,16 +41,29 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
         //Сохраняем файл сессии
         session_write_close();
 
-        $data->events = local_statssibsau_get_array_events($data->events);
-
         $csvexport = new csv_export_writer('commer');
-        if (isset(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]) &&
+
+        // Устанавливаем имя файла согласно категории выгрузки статистики
+        if (isset($data->namecsv) && $data->namecsv) {
+            if ($data->categoryid > 0) {
+                $category = $DB->get_record('course_categories', [
+                        'id' => $data->categoryid,
+                ]);
+            } else {
+                $category = new stdClass();
+                $category->name = 'Верхний уровень';
+            }
+
+            $csvexport->set_filename($category->name);
+        } // Устанавливаем имя файла согласно типу выгрузки статистики
+        else if (isset(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]) &&
                 array_key_exists('text', LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type])) {
             $csvexport->set_filename(LOCAL_STATSSIBSAU_TYPE_EXPORT[$data->type]['text']);
         }
 
         switch ($data->type) {
             case 2:
+                $data->events = local_statssibsau_get_array_events($data->events);
                 $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID курса', 'Название курса'], $data->events));
                 foreach (local_statssibsau_user_activity(
                         $data->categoryid,
@@ -64,6 +77,7 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                 }
                 break;
             case 5:
+                $data->events = local_statssibsau_get_array_events($data->events);
                 $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID курса', 'Название курса'], $data->events));
                 foreach (local_statssibsau_user_activity(
                         $data->categoryid,
@@ -77,13 +91,16 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                 }
                 break;
             case 6:
-                $csvexport->add_data(['ID курса', 'Название курса', 'Видимость курса', 'Видимость категории', 'Категория']);
+                $csvexport->add_data(['ID курса', 'Краткое название курса', 'Полное название курса', 'Видимость курса',
+                        'Видимость категории', 'Категория']);
                 foreach (local_statssibsau_list_courses($data->categoryid) as $data) {
                     $csvexport->add_data($data);
                 }
                 break;
             case 7:
-                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID преподавателя', 'Email', 'ФИО'], $data->events));
+                $data->events = local_statssibsau_get_array_events($data->events);
+                $csvexport->add_data(local_statssibsau_export_prepare_header_csv(['ID преподавателя', 'Email', 'ФИО'],
+                        $data->events));
                 foreach (local_statssibsau_list_users(
                         $data->categoryid,
                         LOCAL_STATSSIBSAU_ROLE_TEACHER,
@@ -91,6 +108,19 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                         $data->dend,
                         $data->events
                 ) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
+            case 8:
+                $csvexport->add_data(['ID курса', 'Краткое название курса', 'Полное название курса', 'Видимость курса',
+                        'Видимость категории', 'Категория']);
+                foreach (local_statssibsau_list_empty_courses($data->categoryid) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
+            case 9:
+                $csvexport->add_data(['Количество пустых курсов', 'Категория']);
+                foreach (local_statssibsau_list_empty_courses_short($data->categoryid) as $data) {
                     $csvexport->add_data($data);
                 }
                 break;
