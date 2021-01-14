@@ -123,7 +123,25 @@ define('LOCAL_STATSSIBSAU_EVENTS', array(
                 'component' => 'gradereport_grader',
                 'action' => 'viewed',
                 'target' => 'grade_report',
-        )
+        ),
+        11 => array(
+            'text' => 'Поставлена оценка',
+            'component' => 'core',
+            'action' => 'graded',
+            'target' => 'user',
+        ),
+        12 => array(
+            'text' => 'Изменена оценка теста',
+            'component' => 'mod_quiz',
+            'action' => 'regraded',
+            'target' => 'attempt',
+        ),
+        13 => array(
+            'text' => 'Вопрос оценен вручную',
+            'component' => 'mod_quiz',
+            'action' => 'graded',
+            'target' => 'question_manually',
+        ),
 ));
 
 function local_statssibsau_export_prepare_header_csv(array $header, array $events) {

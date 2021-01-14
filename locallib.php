@@ -209,7 +209,6 @@ SELECT COUNT(DISTINCT u.id)
         WHERE a.userid = u.id 
           AND b.contextlevel = :contextlevel
           AND a.roleid = :courserole
-        LIMIT 1
    )';
 
     $params = [
@@ -405,14 +404,12 @@ AND l.action = :action
 AND l.target = :target
 AND l.courseid = :courseid
 AND l.timecreated BETWEEN :dbeg AND :dend
-and l.contextlevel = :contextlevel
 and exists(
 SELECT 1
      FROM {role_assignments} a
 INNER JOIN {context} b ON a.contextid=b.id
 INNER JOIN {course} c ON b.instanceid=c.id
     WHERE a.userid = l.userid 
-      AND a.contextid = l.contextid
       AND c.id = l.courseid
       AND a.roleid = :roleid)';
 
@@ -470,7 +467,6 @@ SELECT 1
      FROM {role_assignments} a
 INNER JOIN {context} b ON a.contextid=b.id
     WHERE a.userid = l.userid 
-      AND a.contextid = l.contextid
       AND a.roleid = :roleid)';
 
     if (null !== $userid) {
