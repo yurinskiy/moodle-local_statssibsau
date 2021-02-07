@@ -65,7 +65,7 @@ define('LOCAL_STATSSIBSAU_TYPE_EXPORT', array(
 
 define('LOCAL_STATSSIBSAU_EVENTS', array(
         1 => array(
-                'text' => 'Просмотр курса',
+                'text' => 'Число заходов в курс',
                 'component' => 'core',
                 'action' => 'viewed',
                 'target' => 'course',
