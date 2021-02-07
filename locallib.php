@@ -509,7 +509,7 @@ function local_statssibsau_list_users($categoryid, $roleid, $dbeg, $dend, array 
             $temp = [];
             $temp['id'] = $user->id;
             $temp['email'] = $user->email;
-            $temp['fio'] = trim($user->firstname . ' ' . $user->lastname);
+            $temp['fio'] = trim(sprintf("%s %s", $user->lastname, $user->firstname));
 
             foreach (local_statssibsau_user_activity_global($roleid, $user->id, $dbeg, $dend, $events) as $key => $cnt) {
                 $temp[$key] = $cnt;
@@ -530,7 +530,7 @@ function local_statssibsau_list_users($categoryid, $roleid, $dbeg, $dend, array 
             $temp = [];
             $temp['id'] = $user->id;
             $temp['email'] = $user->email;
-            $temp['fio'] = trim($user->firstname . ' ' . $user->lastname);
+            $temp['fio'] = trim(sprintf("%s %s", $user->lastname, $user->firstname));
 
             foreach (local_statssibsau_user_activity($categoryid, $roleid, $user->id, $dbeg, $dend, $events) as $key => $course) {
                 foreach ($course as $k => $cnt) {
