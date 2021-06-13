@@ -659,6 +659,29 @@ function local_statssibsau_list_empty_courses_short($categoryid, $categorytree =
     return $result;
 }
 
+
+function local_statssibsau_list_everyday_stats(int $dBeg, int $dEnd) {
+    global $DB;
+
+    $result = [];
+
+    $records = $DB->get_records_sql('select c.period, c.cnt_student, c.cnt_assistant, c.cnt_teacher from {report_everyday_stats} c where c.period >= :dbeg and c.period <= :dend', [
+        'dbeg' => $dBeg,
+        'dend' => $dEnd,
+    ]);
+
+    foreach ($records as $record) {
+        $result[] = [
+            (new DateTime('now', core_date::get_server_timezone_object()))->setTimestamp($record->period)->format('d.m.Y'),
+            $record->cnt_student,
+            $record->cnt_assistant,
+            $record->cnt_teacher,
+        ];
+    }
+
+    return $result;
+}
+
 /**
  * Объединяет массивы
  *

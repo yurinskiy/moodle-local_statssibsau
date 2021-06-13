@@ -124,6 +124,12 @@ if (is_siteadmin() || has_capability('local/statssibsau:view', $context)) {
                     $csvexport->add_data($data);
                 }
                 break;
+            case 10:
+                $csvexport->add_data(['День', 'Количество посещений студентами', 'Количество посещений ассистентами', 'Количество посещений преподователями']);
+                foreach (local_statssibsau_list_everyday_stats($data->dbeg, $data->dend) as $data) {
+                    $csvexport->add_data($data);
+                }
+                break;
             default:
                 echo 'В разработке...';
                 $csvexport->add_data(['В разработке...']);

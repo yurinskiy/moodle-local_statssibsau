@@ -135,6 +135,12 @@ class local_statssibsau_form_teacher_actions extends moodleform {
         $mform->disabledIf('dend', 'type', 'eq', 8);
         $mform->disabledIf('dend', 'type', 'eq', 9);
 
+
+        $mform->disabledIf('custom_courses', 'type', 'eq', 10);
+        $mform->disabledIf('categoryid', 'type', 'eq', 10);
+        $mform->disabledIf('events', 'type', 'eq', 10);
+        $mform->disabledIf('namecsv', 'type', 'eq', 10);
+
         $this->add_action_buttons(false, 'Выгрузить');
     }
 }

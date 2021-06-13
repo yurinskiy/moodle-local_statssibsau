@@ -60,6 +60,10 @@ define('LOCAL_STATSSIBSAU_TYPE_EXPORT', array(
         9 => array(
                 'text' => 'Информация о пустых курсах (кратко)',
                 'disabled' => false,
+        ),
+        10 => array(
+                'text' => 'По данным плагина ежедневная статистика',
+                'disabled' => false,
         )
 ));
 
