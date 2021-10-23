@@ -23,3 +23,4 @@
  */
 
 $string['pluginname'] = 'Статистика СибГУ';
+$string['statssibsau:view'] = 'Просматривать модуль Статистика СибГУ';

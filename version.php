@@ -24,11 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version = 2021061300;
+$plugin->version = 2021061500;
 $plugin->requires = 2018120300;
 $plugin->component = 'local_statssibsau';
 $plugin->maturity = MATURITY_BETA;
-$plugin->release = '0.0.11';
+$plugin->release = '0.0.12';
 
 $plugin->dependencies = [
     'report_everyday_stats' => 2021061300
