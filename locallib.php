@@ -171,7 +171,7 @@ function local_statssibsau_count_courses($category = 0) {
  */
 function local_statssibsau_count_users($withSuspended = false) {
     global $DB;
-    $sql = 'SELECT COUNT(*) FROM {user} u WHERE u.username <> \'guest\'';
+    $sql = 'SELECT COUNT(*) FROM {user} u WHERE u.username <> \'guest\' and u.deleted = 0';
     $params = [];
 
     if (!$withSuspended) {
